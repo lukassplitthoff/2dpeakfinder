@@ -5,10 +5,21 @@ date: 25.01.2021
 author: Alina
 
 '''
+import scipy.io as sio
 
-def load_image():
+def load_image(path):
+    """Load the image and display it 
+
+    Parameters
+    ----------
+    path : string
+        path to the file
+
+    Returns
+    -------
+    nothing
+    displays figure
     """
-    input: type string (path to the file)
-    output: figure
-    """
-    print('hello')
+    Im = sio.loadmat(path)
+    
+    
