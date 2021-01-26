@@ -42,7 +42,7 @@ def gaussian_2d(x, y, amp, cen, norm):
     return gaussion_1d(x, amp[0], cen[0], norm[0]) * gaussion_1d(y, amp[1], cen[1], norm[1])
 
 
-def inspector(matrix):
+def inspector(matrix, save):
     """
     Calculate 2d gaussian function for given x and y
 
@@ -58,6 +58,8 @@ def inspector(matrix):
     im = axes.imshow(matrix, cmap="viridis")
     fig.colorbar(im)
     fig.show()
+    if save == True:
+        fig.savefig("../images/2021-01-26_peak.png")
     pass
 
 
@@ -68,7 +70,9 @@ def _example():
                     np.array([10,10]),
                     np.array([1,1]))
 
-    inspector(m)
+    inspector(m, save=True)
+
+    np.savetxt("../data/2021-01-26.txt", m)
 
 
 if __name__ == '__main__':
