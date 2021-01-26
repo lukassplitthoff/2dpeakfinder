@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from skimage.feature import peak_local_max
+from peakgenerator import gaussian_2d
+import scipy.optimize as opt
 
 def plottr(matrix, points, save):
     """
@@ -27,26 +30,118 @@ def plottr(matrix, points, save):
     pass
 
 
-def gradientmethode(matrix):
+def find_local_maxima(matrix, threshold):
+    """ in the 2D array Im find local max
+    Parameters
+    ----------
+    Im : 2D numpy array
+    Returns
+    -------
+    yx : numpy array
+        coordinates of local max
+    """
+    pnt_max = peak_local_max(matrix, min_distance=1, threshold_abs=threshold)
 
-    g = np.gradient(matrix, dtype=float)
+    return pnt_max
 
-    return g
+
+def gaussian(height, center_x, center_y, width_x, width_y):
+    """Returns a gaussian function with the given parameters"""
+    width_x = float(width_x)
+    width_y = float(width_y)
+    return lambda x,y: height*np.exp(
+                -(((center_x-x)/width_x)**2+((center_y-y)/width_y)**2)/2)
+
+def moments(data):
+    """Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution by calculating its
+    moments """
+    total = data.sum()
+    X, Y = np.indices(data.shape)
+    x = (X*data).sum()/total
+    y = (Y*data).sum()/total
+    col = data[:, int(y)]
+    width_x = np.sqrt(np.abs((np.arange(col.size)-x)**2*col).sum()/col.sum())
+    row = data[int(x), :]
+    width_y = np.sqrt(np.abs((np.arange(row.size)-y)**2*row).sum()/row.sum())
+    height = data.max()
+    return height, x, y, width_x, width_y
+
+def fitgaussian(data):
+    """Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution found by a fit"""
+    params = moments(data)
+    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) -
+                                 data)
+    p, success = opt.leastsq(errorfunction, params)
+    return p
+
+
+def peakfitter(data, threshold):
+    """"
+    Wraps around find_local_maxima and fit gaussion to first finds the peaks and then extract the peak values
+
+    Parameters
+    ----------
+    data: float, 2d array
+    threshold: float
+
+
+    Returns
+    -------
+    pnt_max: float, array of guessed maximum position
+    results: float, array of fit parameters
+
+    """
+
+    pnt_max = find_local_maxima(data.T, threshold=threshold)
+
+    results = np.zeros((len(pnt_max), 5), dtype=object)
+
+    for i in range(len(pnt_max)):
+
+        cutout = 20
+        ymax = pnt_max[i, 0]
+        xmax = pnt_max[i, 1]
+
+        a = xmax -20
+        b = xmax +20
+        c = ymax -20
+        d = ymax +20
+
+        if xmax-cutout <= 0:
+            a = xmax
+        elif ymax-cutout <= 0:
+            c = xmax
+        elif xmax+cutout >= 999:
+            b = 999
+        elif ymax+cutout >= 999:
+            d = 999
+
+        data_select = data[a:b,c:d]
+
+        params = fitgaussian(data_select)
+        results[i] = params
+        results[i, 1:3] += np.array([a,c])
+
+    return pnt_max, results
 
 
 def _example():
-    d = np.loadtxt('../data/2021-01-26_multiple-peaks.txt')
+    d = 0
+    for i in range(20):
+        d = d + gaussian_2d(np.linspace(0, 100, 1000),
+                            np.linspace(0, 100, 1000),
+                            np.random.random(2),
+                            np.random.randint(low=0, high=100, size=(1,2))[0],
+                            np.random.randint(low=1, high=20, size=(1,2))[0]/10
+                            )
 
-    g = gradientmethode(d)
-    print(type(g))
-    plottr(d,
-           points=np.array([[100, 100], [200, 200]]),
-           #points=np.array([[100,100], [200,200]]),
-           save="../images/2021-01-26_multiple-peak-plot.png")
+    pnts, results = peakfitter(d, threshold=0.001)
+    plottr(d, points=pnts, save="../images/2021-01-26_multiple-peak-plot.png")
+    print(results, pnts)
+    print(len(pnts))
 
-    #plottr(g,
-     #      points=np.array([]),
-     #      save="../images/2021-01-26_multiple-peak-plot.png")
 
 
 if __name__ == '__main__':

@@ -83,7 +83,7 @@ def _example():
                     np.array([(i+1)*10,(i+1)*10]),
                     np.array([1,1]))
 
-    inspector(n/5, save="../images/2021-01-26_multiple-peak.png")
+    inspector(n, save="../images/2021-01-26_multiple-peak.png")
 
     np.savetxt("../data/2021-01-26_multiple-peaks.txt", n)
 
