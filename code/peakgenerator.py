@@ -49,6 +49,7 @@ def inspector(matrix, save):
     Parameter
     ---------
     matrix: float, array
+    save: str
 
     Returns
     -------
@@ -58,21 +59,33 @@ def inspector(matrix, save):
     im = axes.imshow(matrix, cmap="viridis")
     fig.colorbar(im)
     fig.show()
-    if save == True:
-        fig.savefig("../images/2021-01-26_peak.png")
+    if type(save) == str:
+        fig.savefig(save)
     pass
 
 
 def _example():
-    m = gaussian_2d(np.linspace(-20, 20, 100),
-                    np.linspace(-20, 20, 100),
+    m = gaussian_2d(np.linspace(0, 100, 1000),
+                    np.linspace(0, 100, 1000),
                     np.array([1,1]),
                     np.array([10,10]),
                     np.array([1,1]))
 
-    inspector(m, save=True)
+    inspector(m, save="../images/2021-01-26_single-peak.png")
 
-    np.savetxt("../data/2021-01-26.txt", m)
+    np.savetxt("../data/2021-01-26_single-peak.txt", m)
+
+    n=0
+    for i in range(5):
+        n = n + gaussian_2d(np.linspace(0, 100, 1000),
+                    np.linspace(0, 100, 1000),
+                    np.array([1,1]),
+                    np.array([(i+1)*10,(i+1)*10]),
+                    np.array([1,1]))
+
+    inspector(n/5, save="../images/2021-01-26_multiple-peak.png")
+
+    np.savetxt("../data/2021-01-26_multiple-peaks.txt", n)
 
 
 if __name__ == '__main__':
