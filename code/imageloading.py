@@ -19,7 +19,3 @@ def load_image(path):
     """
     Im = sio.loadmat(path)
     return Im['Im']
-    
-
-
-
