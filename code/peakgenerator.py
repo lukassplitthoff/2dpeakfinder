@@ -41,7 +41,8 @@ def inspector(matrix):
     param: matrix - 2d np array
     """
     fig, axes = plt.subplots()
-    im = axes.imshow(matrix, cmap="viridis")
+    #im = axes.imshow(matrix, cmap="viridis")
+    im = axes.imshow(matrix)
     fig.colorbar(im)
     fig.show()
 
