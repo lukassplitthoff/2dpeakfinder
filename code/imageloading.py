@@ -18,4 +18,7 @@ def load_image(path):
     Im : numpy array
     """
     Im = sio.loadmat(path)
+
     return Im['Im']
+
+
