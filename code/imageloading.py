@@ -7,10 +7,12 @@ import scipy.io as sio
 
 def load_image(path):
     """Load the image and display it 
+
     Parameters
     ----------
     path : string
         path to the file
+
     Returns
     -------
     Im : numpy array
