@@ -2,19 +2,17 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from skimage.feature import peak_local_max
-from peakgenerator import gaussian_2d
+from twodpeakfinder.code.peakgenerator import gaussian_2d
 import scipy.optimize as opt
 
 def plottr(matrix, points, save):
     """
     Calculate 2d gaussian function for given x and y
-
     Parameter
     ---------
     matrix: float, array
     points: float, array
     save: str
-
     Returns
     -------
     figure
@@ -57,66 +55,75 @@ def moments(data):
     the gaussian parameters of a 2D distribution by calculating its
     moments """
     total = data.sum()
-    X, Y = np.indices(data.shape)
-    x = (X*data).sum()/total
-    y = (Y*data).sum()/total
-    col = data[:, int(y)]
-    width_x = np.sqrt(np.abs((np.arange(col.size)-x)**2*col).sum()/col.sum())
-    row = data[int(x), :]
-    width_y = np.sqrt(np.abs((np.arange(row.size)-y)**2*row).sum()/row.sum())
-    height = data.max()
-    return height, x, y, width_x, width_y
-
+    if total !=0:
+        #print(total)
+        X, Y = np.indices(data.shape)
+        #print(data.shape)
+        x = (X*data).sum()/total
+        y = (Y*data).sum()/total
+        #print(x,y)
+        col = data[:, int(y)]
+        width_x = np.sqrt(np.abs((np.arange(col.size)-x)**2*col).sum()/col.sum())
+        row = data[int(x), :]
+        width_y = np.sqrt(np.abs((np.arange(row.size)-y)**2*row).sum()/row.sum())
+        height = data.max()
+        return height, x, y, width_x, width_y
+    else:
+        return 0,0,0,0,0
+    
+    
 def fitgaussian(data):
     """Returns (height, x, y, width_x, width_y)
     the gaussian parameters of a 2D distribution found by a fit"""
     params = moments(data)
-    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) -
+    if params[0] != 0:
+        errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) -
                                  data)
-    p, success = opt.leastsq(errorfunction, params)
-    return p
+        p, success = opt.leastsq(errorfunction, params)
+        return p
+    
+    else:
+        return 0,0,0,0,0
 
 
 def peakfitter(data, threshold):
     """"
     Wraps around find_local_maxima and fit gaussion to first finds the peaks and then extract the peak values
-
     Parameters
     ----------
     data: float, 2d array
     threshold: float
-
-
     Returns
     -------
     pnt_max: float, array of guessed maximum position
     results: float, array of fit parameters
-
     """
 
     pnt_max = find_local_maxima(data.T, threshold=threshold)
+    #print(pnt_max)
 
     results = np.zeros((len(pnt_max), 5), dtype=object)
 
     for i in range(len(pnt_max)):
+        #print(" i",i)
 
-        cutout = 20
+        cutout = 3
         ymax = pnt_max[i, 0]
         xmax = pnt_max[i, 1]
 
-        a = xmax -20
-        b = xmax +20
-        c = ymax -20
-        d = ymax +20
+        a = xmax -cutout
+        b = xmax +cutout
+        c = ymax -cutout
+        d = ymax +cutout
 
         if xmax-cutout <= 0:
             a = xmax
         elif ymax-cutout <= 0:
             c = xmax
-        elif xmax+cutout >= 999:
-            b = 999
-        elif ymax+cutout >= 999:
-            d = 999
+        elif xmax+cutout >= data.shape[0]:
+            b = data.shape[0]
+        elif ymax+cutout >= data.shape[1]:
+            d = data.shape[1]
 
         data_select = data[a:b,c:d]
 
@@ -137,10 +144,10 @@ def _example():
                             np.random.randint(low=1, high=20, size=(1,2))[0]/10
                             )
 
-    pnts, results = peakfitter(d, threshold=0.001)
-    plottr(d, points=pnts, save="../images/2021-01-26_multiple-peak-plot.png")
-    print(results, pnts)
-    print(len(pnts))
+    pnts, results = peakfitter(Im, threshold=250)
+    plottr(Im, points=pnts, save="twodpeakfinder/images/2021-01-26_multiple-peak-plot.png")
+    #print(results, pnts)
+    #print(len(pnts))
 
 
 
